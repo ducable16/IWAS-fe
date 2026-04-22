@@ -10,17 +10,16 @@
 
 1. [Authentication](#1-authentication)
 2. [User Management](#2-user-management)
-3. [Department](#3-department)
-4. [Project](#4-project)
-5. [Task](#5-task)
-6. [Time Log](#6-time-log)
-7. [Skill](#7-skill)
-8. [Employee Skill](#8-employee-skill)
-9. [Notification](#9-notification)
-10. [Workload](#10-workload)
-11. [API Flows by Use Case](#11-api-flows-by-use-case)
-12. [Enum Reference](#12-enum-reference)
-13. [Response Wrapper](#13-response-wrapper)
+3. [Project](#3-project)
+4. [Task](#4-task)
+5. [Time Log](#5-time-log)
+6. [Skill](#6-skill)
+7. [Employee Skill](#7-employee-skill)
+8. [Notification](#8-notification)
+9. [Workload](#9-workload)
+10. [API Flows by Use Case](#10-api-flows-by-use-case)
+11. [Enum Reference](#11-enum-reference)
+12. [Response Wrapper](#12-response-wrapper)
 
 ---
 
@@ -90,7 +89,6 @@ User clicks the link in the email → backend redirects to frontend `/login?veri
     "fullName": "Nguyen Van A",
     "phone": "0901234567",
     "avatarUrl": null,
-    "departmentId": 2,
     "position": "Developer",
     "role": "TEAM_MEMBER",
     "verified": true,
@@ -210,7 +208,6 @@ Sends a password reset link to the provided email address.
   "fullName": "Nguyen Van A",
   "phone": "0901234567",
   "avatarUrl": null,
-  "departmentId": 2,
   "position": "Senior Developer",
   "role": "PROJECT_MANAGER",
   "verified": true,
@@ -260,7 +257,6 @@ Sends a password reset link to the provided email address.
   "fullName": "Tran Thi B",            // required, max 100 characters
   "username": "tranthib",              // optional, max 100 characters
   "phone": "0987654321",               // optional, max 20 characters
-  "departmentId": 2,                   // optional
   "position": "Junior Developer",      // optional, max 100 characters
   "role": "TEAM_MEMBER"               // default: TEAM_MEMBER
 }
@@ -271,7 +267,7 @@ Sends a password reset link to the provided email address.
 ---
 
 ### 2.5 Update User (Admin / HR)
-**`PUT /api/users/{id}`** 🛡️ _ADMIN or HR_
+**`POST /api/users/{id}/update`** 🛡️ _ADMIN or HR_
 
 > HR cannot change the `role` field.
 
@@ -283,7 +279,6 @@ Sends a password reset link to the provided email address.
   "fullName": "Tran Thi B Updated",
   "username": "tranthib_new",
   "phone": "0111222333",
-  "departmentId": 3,
   "position": "Senior Developer",
   "role": "PROJECT_MANAGER"   // Only ADMIN can change this
 }
@@ -327,78 +322,14 @@ Sends a password reset link to the provided email address.
 
 ---
 
-## 3. Department
-
-> Base path: `/api/departments`  
-> 🔒 Requires Bearer Token.
-
----
-
-### 3.1 Get All Departments
-**`GET /api/departments`**
-
-**Response:** `200 OK`
-```json
-[
-  {
-    "id": 1,
-    "name": "Engineering",
-    "description": "Software engineering team",
-    "managerId": 5,
-    "createdAt": "2025-01-01T00:00:00"
-  }
-]
-```
-
----
-
-### 3.2 Get Department by ID
-**`GET /api/departments/{id}`**
-
-**Response:** `200 OK` → `DepartmentResponse`
-
----
-
-### 3.3 Create Department
-**`POST /api/departments`** 🛡️ _ADMIN or HR_
-
-**Request Body:**
-```json
-{
-  "name": "Marketing",         // required, max 100 characters
-  "description": "Marketing team",
-  "managerId": 3               // optional
-}
-```
-
-**Response:** `201 Created` → `DepartmentResponse`
-
----
-
-### 3.4 Update Department
-**`POST /api/departments/{id}/update`** 🛡️ _ADMIN or HR_
-
-**Request Body:** same structure as Create Department
-
-**Response:** `200 OK` → `DepartmentResponse`
-
----
-
-### 3.5 Delete Department
-**`POST /api/departments/{id}/delete`** 🛡️ _ADMIN only_
-
-**Response:** `200 OK`
-
----
-
-## 4. Project
+## 3. Project
 
 > Base path: `/api/projects`  
 > 🔒 Requires Bearer Token.
 
 ---
 
-### 4.1 Get All Projects
+### 3.1 Get All Projects
 **`GET /api/projects`**
 
 Can be filtered by status.
@@ -429,14 +360,14 @@ Can be filtered by status.
 
 ---
 
-### 4.2 Get Project by ID
+### 3.2 Get Project by ID
 **`GET /api/projects/{id}`**
 
 **Response:** `200 OK` → `ProjectResponse`
 
 ---
 
-### 4.3 Create Project
+### 3.3 Create Project
 **`POST /api/projects`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Request Body:**
@@ -457,7 +388,7 @@ Can be filtered by status.
 
 ---
 
-### 4.4 Update Project
+### 3.4 Update Project
 **`POST /api/projects/{id}/update`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Request Body:** same structure as Create Project
@@ -466,14 +397,14 @@ Can be filtered by status.
 
 ---
 
-### 4.5 Delete Project
+### 3.5 Delete Project
 **`POST /api/projects/{id}/delete`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Response:** `200 OK`
 
 ---
 
-### 4.6 Get Project Members
+### 3.6 Get Project Members
 **`GET /api/projects/{id}/members`**
 
 **Response:** `200 OK`
@@ -495,7 +426,7 @@ Can be filtered by status.
 
 ---
 
-### 4.7 Add Member to Project
+### 3.7 Add Member to Project
 **`POST /api/projects/{id}/members`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Request Body:**
@@ -513,7 +444,7 @@ Can be filtered by status.
 
 ---
 
-### 4.8 Update Member Information
+### 3.8 Update Member Information
 **`POST /api/projects/{id}/members/{memberId}/update`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Request Body:** same structure as Add Member
@@ -522,35 +453,35 @@ Can be filtered by status.
 
 ---
 
-### 4.9 Remove Member from Project
+### 3.9 Remove Member from Project
 **`POST /api/projects/{id}/members/{memberId}/delete`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Response:** `200 OK`
 
 ---
 
-## 5. Task
+## 4. Task
 
 > Base paths: `/api/tasks` and `/api/projects/{projectId}/tasks`  
 > 🔒 Requires Bearer Token.
 
 ---
 
-### 5.1 Get Tasks of a Project (nested route)
+### 4.1 Get Tasks of a Project (nested route)
 **`GET /api/projects/{projectId}/tasks`**
 
 **Response:** `200 OK` → `List<TaskResponse>`
 
 ---
 
-### 5.2 Get Tasks Assigned to Me
+### 4.2 Get Tasks Assigned to Me
 **`GET /api/tasks/my`**
 
 **Response:** `200 OK` → `List<TaskResponse>`
 
 ---
 
-### 5.3 Get Task by ID
+### 4.3 Get Task by ID
 **`GET /api/tasks/{id}`**
 
 **Response:** `200 OK`
@@ -586,7 +517,7 @@ Can be filtered by status.
 
 ---
 
-### 5.4 Create Task
+### 4.4 Create Task
 **`POST /api/tasks`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Request Body:**
@@ -615,7 +546,7 @@ Can be filtered by status.
 
 ---
 
-### 5.5 Update Task
+### 4.5 Update Task
 **`POST /api/tasks/{id}/update`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Request Body:** same structure as Create Task
@@ -624,7 +555,7 @@ Can be filtered by status.
 
 ---
 
-### 5.6 Update Task Status
+### 4.6 Update Task Status
 **`POST /api/tasks/{id}/status`** _(Any authenticated user)_
 
 **Request Body:**
@@ -639,14 +570,14 @@ Can be filtered by status.
 
 ---
 
-### 5.7 Delete Task
+### 4.7 Delete Task
 **`POST /api/tasks/{id}/delete`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Response:** `200 OK`
 
 ---
 
-### 5.8 Get Task Status Change History
+### 4.8 Get Task Status Change History
 **`GET /api/tasks/{id}/history`**
 
 **Response:** `200 OK`
@@ -665,14 +596,14 @@ Can be filtered by status.
 
 ---
 
-## 6. Time Log
+## 5. Time Log
 
 > Base path: `/api/time-logs`  
 > 🔒 Requires Bearer Token.
 
 ---
 
-### 6.1 Get My Time Logs
+### 5.1 Get My Time Logs
 **`GET /api/time-logs/my`**
 
 **Query Params:**
@@ -699,14 +630,14 @@ Can be filtered by status.
 
 ---
 
-### 6.2 Get Time Logs by Task
+### 5.2 Get Time Logs by Task
 **`GET /api/time-logs/task/{taskId}`**
 
 **Response:** `200 OK` → `List<TimeLogResponse>`
 
 ---
 
-### 6.3 Log Work Time
+### 5.3 Log Work Time
 **`POST /api/time-logs`**
 
 **Request Body:**
@@ -723,7 +654,7 @@ Can be filtered by status.
 
 ---
 
-### 6.4 Update Time Log
+### 5.4 Update Time Log
 **`POST /api/time-logs/{id}/update`**
 
 **Request Body:** same structure as Create Time Log
@@ -732,21 +663,21 @@ Can be filtered by status.
 
 ---
 
-### 6.5 Delete Time Log
+### 5.5 Delete Time Log
 **`POST /api/time-logs/{id}/delete`**
 
 **Response:** `200 OK`
 
 ---
 
-## 7. Skill
+## 6. Skill
 
 > Base path: `/api/skills`  
 > 🔒 Requires Bearer Token.
 
 ---
 
-### 7.1 Get All Skills
+### 6.1 Get All Skills
 **`GET /api/skills`**
 
 **Response:** `200 OK`
@@ -763,14 +694,14 @@ Can be filtered by status.
 
 ---
 
-### 7.2 Get Skill by ID
+### 6.2 Get Skill by ID
 **`GET /api/skills/{id}`**
 
 **Response:** `200 OK` → `SkillResponse`
 
 ---
 
-### 7.3 Create Skill
+### 6.3 Create Skill
 **`POST /api/skills`** 🛡️ _ADMIN or HR_
 
 **Request Body:**
@@ -786,7 +717,7 @@ Can be filtered by status.
 
 ---
 
-### 7.4 Update Skill
+### 6.4 Update Skill
 **`POST /api/skills/{id}/update`** 🛡️ _ADMIN or HR_
 
 **Request Body:** same structure as Create Skill
@@ -795,21 +726,21 @@ Can be filtered by status.
 
 ---
 
-### 7.5 Delete Skill
+### 6.5 Delete Skill
 **`POST /api/skills/{id}/delete`** 🛡️ _ADMIN only_
 
 **Response:** `200 OK`
 
 ---
 
-## 8. Employee Skill
+## 7. Employee Skill
 
 > Base path: `/api/users`  
 > 🔒 Requires Bearer Token.
 
 ---
 
-### 8.1 Get Skills of a Specific User
+### 7.1 Get Skills of a Specific User
 **`GET /api/users/{userId}/skills`** 🛡️ _Any authenticated user_
 
 **Response:** `200 OK`
@@ -830,14 +761,14 @@ Can be filtered by status.
 
 ---
 
-### 8.2 Get My Skills
+### 7.2 Get My Skills
 **`GET /api/users/me/skills`**
 
 **Response:** `200 OK` → `List<EmployeeSkillResponse>`
 
 ---
 
-### 8.3 Add Skill to My Profile
+### 7.3 Add Skill to My Profile
 **`POST /api/users/me/skills`**
 
 **Request Body:**
@@ -854,7 +785,7 @@ Can be filtered by status.
 
 ---
 
-### 8.4 Update My Skill
+### 7.4 Update My Skill
 **`POST /api/users/me/skills/{skillId}/update`**
 
 **Request Body:** same structure as Add My Skill
@@ -863,14 +794,14 @@ Can be filtered by status.
 
 ---
 
-### 8.5 Remove My Skill
+### 7.5 Remove My Skill
 **`POST /api/users/me/skills/{skillId}/delete`**
 
 **Response:** `200 OK`
 
 ---
 
-### 8.6 Add Skill for a User (Admin/HR)
+### 7.6 Add Skill for a User (Admin/HR)
 **`POST /api/users/{userId}/skills`** 🛡️ _ADMIN or HR_
 
 **Request Body:** same structure as Add My Skill
@@ -879,7 +810,7 @@ Can be filtered by status.
 
 ---
 
-## 9. Notification
+## 8. Notification
 
 > Base path: `/api/notifications`  
 > 🔒 Requires Bearer Token.  
@@ -887,7 +818,7 @@ Can be filtered by status.
 
 ---
 
-### 9.1 Get All Notifications
+### 8.1 Get All Notifications
 **`GET /api/notifications`**
 
 **Response:** `200 OK`
@@ -909,14 +840,14 @@ Can be filtered by status.
 
 ---
 
-### 9.2 Get Unread Notifications
+### 8.2 Get Unread Notifications
 **`GET /api/notifications/unread`**
 
 **Response:** `200 OK` → `List<NotificationResponse>` (only unread notifications)
 
 ---
 
-### 9.3 Count Unread Notifications
+### 8.3 Count Unread Notifications
 **`GET /api/notifications/unread/count`**
 
 **Response:** `200 OK`
@@ -928,28 +859,28 @@ Can be filtered by status.
 
 ---
 
-### 9.4 Mark Notification as Read
+### 8.4 Mark Notification as Read
 **`POST /api/notifications/{id}/read`**
 
 **Response:** `200 OK` → `NotificationResponse` (with `isRead: true`, `readAt: <timestamp>`)
 
 ---
 
-### 9.5 Mark All Notifications as Read
+### 8.5 Mark All Notifications as Read
 **`POST /api/notifications/read-all`**
 
 **Response:** `204 No Content`
 
 ---
 
-## 10. Workload
+## 9. Workload
 
 > Base path: `/api/workload`  
 > 🔒 Requires Bearer Token.
 
 ---
 
-### 10.1 View Team Workload
+### 9.1 View Team Workload
 **`GET /api/workload/team`** 🛡️ _ADMIN, HR, PROJECT_MANAGER_
 
 **Query Params:**
@@ -976,21 +907,21 @@ Can be filtered by status.
 
 ---
 
-### 10.2 View My Workload
+### 9.2 View My Workload
 **`GET /api/workload/me`**
 
 **Response:** `200 OK` → `List<WorkloadSnapshotResponse>` (historical snapshots)
 
 ---
 
-### 10.3 View Workload of a Specific User
+### 9.3 View Workload of a Specific User
 **`GET /api/workload/users/{userId}`** 🛡️ _ADMIN, HR, PROJECT_MANAGER_
 
 **Response:** `200 OK` → `List<WorkloadSnapshotResponse>`
 
 ---
 
-### 10.4 Manually Take Workload Snapshot
+### 9.4 Manually Take Workload Snapshot
 **`POST /api/workload/snapshot?userId={userId}`** 🛡️ _ADMIN or HR_
 
 **Query Params:**
@@ -1002,7 +933,7 @@ Can be filtered by status.
 
 ---
 
-### 10.5 View Burnout Logs (System-wide)
+### 9.5 View Burnout Logs (System-wide)
 **`GET /api/workload/burnout`** 🛡️ _ADMIN, HR, PROJECT_MANAGER_
 
 **Response:** `200 OK`
@@ -1025,14 +956,14 @@ Can be filtered by status.
 
 ---
 
-### 10.6 View Burnout History of a Specific User
+### 9.6 View Burnout History of a Specific User
 **`GET /api/workload/burnout/users/{userId}`** 🛡️ _ADMIN, HR, PROJECT_MANAGER_
 
 **Response:** `200 OK` → `List<BurnoutLogResponse>`
 
 ---
 
-## 11. API Flows by Use Case
+## 10. API Flows by Use Case
 
 ### 🔐 Flow 1: Register & Verify Account
 
@@ -1074,11 +1005,10 @@ Can be filtered by status.
 ### 👤 Flow 4: Employee Management (Admin/HR)
 
 ```
-1. GET  /api/departments               → Get department list
-2. POST /api/users { ... }             → Create new employee (Admin)
-3. GET  /api/users                     → List all employees
-4. PUT  /api/users/{id} { ... }        → Update employee info
-5. POST /api/users/{id}/activate       → Activate account
+1. POST /api/users { ... }             → Create new employee (Admin)
+2. GET  /api/users                     → List all employees
+3. PUT  /api/users/{id} { ... }        → Update employee info
+4. POST /api/users/{id}/activate       → Activate account
    POST /api/users/{id}/deactivate     → Deactivate account
 ```
 
@@ -1148,7 +1078,7 @@ Can be filtered by status.
 
 ---
 
-## 12. Enum Reference
+## 11. Enum Reference
 
 ### UserRole
 | Value | Description |
@@ -1229,7 +1159,7 @@ Can be filtered by status.
 
 ---
 
-## 13. Response Wrapper
+## 12. Response Wrapper
 
 All API responses are wrapped by `ApiResponse`:
 
@@ -1273,7 +1203,6 @@ All API responses are wrapped by `ApiResponse`:
 | Auth (register, login...) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Personal profile | ❌ | ✅ | ✅ | ✅ | ✅ |
 | User management | ❌ | ❌ | ✅ (cannot change role) | ❌ | ✅ |
-| Department CRUD | ❌ | ❌ | ✅ | ❌ | ✅ |
 | Project CRUD | ❌ | ❌ | ❌ | ✅ | ✅ |
 | Project members | ❌ | 👁️ | ❌ | ✅ | ✅ |
 | Task CRUD | ❌ | ❌ | ❌ | ✅ | ✅ |
