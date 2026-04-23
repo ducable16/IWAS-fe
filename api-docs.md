@@ -12,6 +12,7 @@
 2. [User Management](#2-user-management)
 3. [Project](#3-project)
 4. [Task](#4-task)
+   - [4.9 Task Comments](#49-get-task-comments)
 5. [Time Log](#5-time-log)
 6. [Skill](#6-skill)
 7. [Employee Skill](#7-employee-skill)
@@ -484,6 +485,8 @@ Can be filtered by status.
 ### 4.3 Get Task by ID
 **`GET /api/tasks/{id}`**
 
+> Returns the full task detail including embedded **comments**. List endpoints (`GET /my`, `GET /projects/{id}/tasks`) omit the `comments` field (`null`) for performance.
+
 **Response:** `200 OK`
 ```json
 {
@@ -499,9 +502,30 @@ Can be filtered by status.
   "startDate": "2025-02-01",
   "dueDate": "2025-02-07",
   "completedAt": null,
-  "assigneeId": 5,
-  "assigneeName": "Nguyen Van A",
-  "reporterId": 2,
+  "assignee": {
+    "id": 5,
+    "email": "member@example.com",
+    "username": "nguyenvana",
+    "fullName": "Nguyen Van A",
+    "phone": "0901234567",
+    "avatarUrl": null,
+    "position": "Developer",
+    "role": "TEAM_MEMBER",
+    "verified": true,
+    "active": true
+  },
+  "reporter": {
+    "id": 2,
+    "email": "pm@example.com",
+    "username": "tranthib",
+    "fullName": "Tran Thi B",
+    "phone": null,
+    "avatarUrl": null,
+    "position": "Project Manager",
+    "role": "PROJECT_MANAGER",
+    "verified": true,
+    "active": true
+  },
   "skillRequirements": [
     {
       "id": 1,
@@ -509,6 +533,27 @@ Can be filtered by status.
       "skillName": "React",
       "minimumLevel": "INTERMEDIATE",
       "isRequired": true
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "taskId": 1,
+      "author": {
+        "id": 5,
+        "email": "member@example.com",
+        "username": "nguyenvana",
+        "fullName": "Nguyen Van A",
+        "phone": "0901234567",
+        "avatarUrl": null,
+        "position": "Developer",
+        "role": "TEAM_MEMBER",
+        "verified": true,
+        "active": true
+      },
+      "content": "I've started working on this. Will update by EOD.",
+      "createdAt": "2025-02-01T09:30:00",
+      "updatedAt": "2025-02-01T09:30:00"
     }
   ],
   "createdAt": "2025-01-20T10:00:00"
@@ -593,6 +638,75 @@ Can be filtered by status.
   }
 ]
 ```
+
+---
+
+### 4.9 Get Task Comments
+**`GET /api/tasks/{taskId}/comments`**
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "id": 1,
+    "taskId": 10,
+    "author": {
+      "id": 5,
+      "email": "member@example.com",
+      "username": "nguyenvana",
+      "fullName": "Nguyen Van A",
+      "phone": "0901234567",
+      "avatarUrl": null,
+      "position": "Developer",
+      "role": "TEAM_MEMBER",
+      "verified": true,
+      "active": true
+    },
+    "content": "I've started working on this. Will update by EOD.",
+    "createdAt": "2025-02-01T09:30:00",
+    "updatedAt": "2025-02-01T09:30:00"
+  }
+]
+```
+
+---
+
+### 4.10 Add Comment to Task
+**`POST /api/tasks/{taskId}/comments`** _(Any authenticated user)_
+
+**Request Body:**
+```json
+{
+  "content": "I've started working on this. Will update by EOD."  // required, non-blank
+}
+```
+
+**Response:** `201 Created` → `TaskCommentResponse`
+
+---
+
+### 4.11 Update Comment
+**`POST /api/tasks/{taskId}/comments/{commentId}/update`** _(Author only)_
+
+> Only the comment author can update their own comment. Returns `403 Forbidden` otherwise.
+
+**Request Body:**
+```json
+{
+  "content": "Updated comment text."
+}
+```
+
+**Response:** `200 OK` → `TaskCommentResponse`
+
+---
+
+### 4.12 Delete Comment
+**`POST /api/tasks/{taskId}/comments/{commentId}/delete`** _(Author only)_
+
+> Only the comment author can delete their own comment. Returns `403 Forbidden` otherwise.
+
+**Response:** `200 OK`
 
 ---
 
@@ -1035,8 +1149,10 @@ Can be filtered by status.
 2. GET  /api/tasks/{id}           → View task details
 3. POST /api/tasks/{id}/status { status: "IN_PROGRESS" } → Start working
 4. POST /api/time-logs { taskId, logDate, hoursSpent }   → Log work time
-5. POST /api/tasks/{id}/status { status: "IN_REVIEW" }   → Move to review
-6. POST /api/tasks/{id}/status { status: "DONE" }        → Mark as complete
+5. GET  /api/tasks/{id}/comments  → View discussion thread
+6. POST /api/tasks/{id}/comments { content }             → Post a comment
+7. POST /api/tasks/{id}/status { status: "IN_REVIEW" }   → Move to review
+8. POST /api/tasks/{id}/status { status: "DONE" }        → Mark as complete
 ```
 
 ---
@@ -1207,6 +1323,7 @@ All API responses are wrapped by `ApiResponse`:
 | Project members | ❌ | 👁️ | ❌ | ✅ | ✅ |
 | Task CRUD | ❌ | ❌ | ❌ | ✅ | ✅ |
 | Task status update | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Task comments | ❌ | ✅ (own) | ✅ (own) | ✅ (own) | ✅ |
 | Time logs | ❌ | ✅ | ✅ | ✅ | ✅ |
 | Skill master data | ❌ | 👁️ | ✅ | 👁️ | ✅ |
 | Employee skills | ❌ | ✅ (of self) | ✅ | 👁️ | ✅ |
