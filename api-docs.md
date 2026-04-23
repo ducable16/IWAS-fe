@@ -12,7 +12,10 @@
 2. [User Management](#2-user-management)
 3. [Project](#3-project)
 4. [Task](#4-task)
-   - [4.9 Task Comments](#49-get-task-comments)
+   - [4.3 Search & Filter Tasks](#43-search--filter-tasks)
+   - [4.4 Kanban Board](#44-get-kanban-board)
+   - [4.5 Calendar View](#45-get-calendar-view)
+   - [4.12 Task Comments](#412-get-task-comments)
 5. [Time Log](#5-time-log)
 6. [Skill](#6-skill)
 7. [Employee Skill](#7-employee-skill)
@@ -482,7 +485,140 @@ Can be filtered by status.
 
 ---
 
-### 4.3 Get Task by ID
+### 4.3 Search & Filter Tasks
+**`GET /api/tasks`**
+
+Main list view with full-text search, multi-criteria filtering, sorting, and pagination.
+
+**Query Params:**
+| Param | Required | Type | Description |
+|-------|----------|------|-------------|
+| `search` | ❌ | `string` | Full-text search on title and description |
+| `projectId` | ❌ | `long` | Filter by project |
+| `statuses` | ❌ | `TaskStatus[]` | Filter by one or more statuses (repeatable param) |
+| `assigneeId` | ❌ | `long` | Filter by assignee |
+| `reporterId` | ❌ | `long` | Filter by reporter/creator |
+| `priorities` | ❌ | `TaskPriority[]` | Filter by one or more priorities |
+| `types` | ❌ | `TaskType[]` | Filter by one or more types |
+| `labels` | ❌ | `string[]` | Filter by labels (repeatable param) |
+| `sprint` | ❌ | `string` | Filter by sprint name (exact match) |
+| `dueDateFrom` | ❌ | `date` | Due date range start (`YYYY-MM-DD`) |
+| `dueDateTo` | ❌ | `date` | Due date range end (`YYYY-MM-DD`) |
+| `sortBy` | ❌ | `string` | Sort field: `createdAt` (default), `priority`, `dueDate`, `updatedAt`, `title` |
+| `sortDirection` | ❌ | `string` | `DESC` (default) or `ASC` |
+| `page` | ❌ | `int` | Page index, 0-based (default: `0`) |
+| `size` | ❌ | `int` | Page size, max 100 (default: `20`) |
+| `<customFieldKey>` | ❌ | `string` | Any extra query param is treated as a custom field filter (key=value exact match) |
+
+**Example:**
+```
+GET /api/tasks?search=login&statuses=TODO&statuses=IN_PROGRESS&priorities=HIGH&sortBy=dueDate&sortDirection=ASC&page=0&size=20
+```
+
+**Response:** `200 OK`
+```json
+{
+  "content": [ /* TaskResponse[] */ ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 42,
+  "totalPages": 3
+}
+```
+
+---
+
+### 4.4 Get Kanban Board
+**`GET /api/tasks/board`**
+
+Returns all tasks of a project grouped into Kanban columns by status.
+
+> Response is cached per `projectId`. Cache is invalidated on any task create/update/delete/status change.
+
+**Query Params:**
+| Param | Required | Description |
+|-------|----------|-------------|
+| `projectId` | ✅ | ID of the project |
+
+**Response:** `200 OK`
+```json
+{
+  "projectId": 1,
+  "columns": [
+    {
+      "status": "TODO",
+      "displayName": "To Do",
+      "tasks": [ /* TaskResponse[] */ ],
+      "count": 5
+    },
+    {
+      "status": "IN_PROGRESS",
+      "displayName": "In Progress",
+      "tasks": [ /* TaskResponse[] */ ],
+      "count": 3
+    },
+    {
+      "status": "IN_REVIEW",
+      "displayName": "In Review",
+      "tasks": [],
+      "count": 0
+    },
+    {
+      "status": "DONE",
+      "displayName": "Done",
+      "tasks": [ /* TaskResponse[] */ ],
+      "count": 12
+    },
+    {
+      "status": "CANCELLED",
+      "displayName": "Cancelled",
+      "tasks": [],
+      "count": 0
+    }
+  ]
+}
+```
+
+---
+
+### 4.5 Get Calendar View
+**`GET /api/tasks/calendar`**
+
+Returns tasks grouped by `dueDate` for the given date range — used to render a calendar/timeline view. Only tasks that have a `dueDate` within the range are included.
+
+**Query Params:**
+| Param | Required | Description |
+|-------|----------|-------------|
+| `from` | ✅ | Range start date (`YYYY-MM-DD`) |
+| `to` | ✅ | Range end date (`YYYY-MM-DD`) |
+| `projectId` | ❌ | Scope to a specific project |
+
+**Example:**
+```
+GET /api/tasks/calendar?from=2025-02-01&to=2025-02-28&projectId=1
+```
+
+**Response:** `200 OK`
+```json
+[
+  {
+    "date": "2025-02-05",
+    "tasks": [ /* TaskResponse[] */ ],
+    "count": 2
+  },
+  {
+    "date": "2025-02-12",
+    "tasks": [ /* TaskResponse[] */ ],
+    "count": 1
+  }
+]
+```
+
+> Only dates that have at least one task are included in the response array.
+
+---
+
+### 4.6 Get Task by ID
 **`GET /api/tasks/{id}`**
 
 > Returns the full task detail including embedded **comments**. List endpoints (`GET /my`, `GET /projects/{id}/tasks`) omit the `comments` field (`null`) for performance.
@@ -562,7 +698,7 @@ Can be filtered by status.
 
 ---
 
-### 4.4 Create Task
+### 4.7 Create Task
 **`POST /api/tasks`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Request Body:**
@@ -571,19 +707,25 @@ Can be filtered by status.
   "projectId": 1,              // required
   "title": "Implement login",  // required, max 300 characters
   "description": "Build login UI with JWT support",
-  "type": "FEATURE",           // default: FEATURE
-  "priority": "HIGH",          // default: MEDIUM
+  "type": "FEATURE",           // default: FEATURE. Values: FEATURE, BUG, IMPROVEMENT, RESEARCH, TASK
+  "priority": "HIGH",          // default: MEDIUM. Values: LOW, MEDIUM, HIGH, CRITICAL
   "estimatedHours": 8.0,
   "startDate": "2025-02-01",
   "dueDate": "2025-02-07",
   "assigneeId": 5,
+  "sprint": "Sprint 3",        // optional, max 100 characters
+  "labels": ["frontend", "auth"],
   "skillRequirements": [
     {
-      "skillId": 3,           // required
-      "minimumLevel": "INTERMEDIATE",  // default: INTERMEDIATE
-      "isRequired": true      // default: true
+      "skillId": 3,                       // required
+      "minimumLevel": "INTERMEDIATE",     // default: INTERMEDIATE
+      "isRequired": true                  // default: true
     }
-  ]
+  ],
+  "customFields": {
+    "storyPoints": "5",
+    "component": "auth-service"
+  }
 }
 ```
 
@@ -591,7 +733,7 @@ Can be filtered by status.
 
 ---
 
-### 4.5 Update Task
+### 4.8 Update Task
 **`POST /api/tasks/{id}/update`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Request Body:** same structure as Create Task
@@ -600,13 +742,22 @@ Can be filtered by status.
 
 ---
 
-### 4.6 Update Task Status
+### 4.9 Update Task Status
 **`POST /api/tasks/{id}/status`** _(Any authenticated user)_
+
+> Status transitions are validated. Invalid transitions return `400 Bad Request`.
+>
+> Allowed transitions:
+> - `TODO` → `IN_PROGRESS`, `CANCELLED`
+> - `IN_PROGRESS` → `IN_REVIEW`, `TODO`, `CANCELLED`
+> - `IN_REVIEW` → `DONE`, `IN_PROGRESS`, `TODO`, `CANCELLED`
+> - `DONE` → `IN_PROGRESS`, `TODO`
+> - `CANCELLED` → `TODO`
 
 **Request Body:**
 ```json
 {
-  "status": "IN_PROGRESS",  // required: TODO, IN_PROGRESS, IN_REVIEW, DONE, BLOCKED
+  "status": "IN_PROGRESS",  // required: TODO, IN_PROGRESS, IN_REVIEW, DONE, CANCELLED
   "note": "Starting implementation"
 }
 ```
@@ -615,14 +766,14 @@ Can be filtered by status.
 
 ---
 
-### 4.7 Delete Task
+### 4.10 Delete Task
 **`POST /api/tasks/{id}/delete`** 🛡️ _ADMIN or PROJECT_MANAGER_
 
 **Response:** `200 OK`
 
 ---
 
-### 4.8 Get Task Status Change History
+### 4.11 Get Task Status Change History
 **`GET /api/tasks/{id}/history`**
 
 **Response:** `200 OK`
@@ -641,7 +792,7 @@ Can be filtered by status.
 
 ---
 
-### 4.9 Get Task Comments
+### 4.12 Get Task Comments
 **`GET /api/tasks/{taskId}/comments`**
 
 **Response:** `200 OK`
@@ -671,7 +822,7 @@ Can be filtered by status.
 
 ---
 
-### 4.10 Add Comment to Task
+### 4.13 Add Comment to Task
 **`POST /api/tasks/{taskId}/comments`** _(Any authenticated user)_
 
 **Request Body:**
@@ -685,7 +836,7 @@ Can be filtered by status.
 
 ---
 
-### 4.11 Update Comment
+### 4.14 Update Comment
 **`POST /api/tasks/{taskId}/comments/{commentId}/update`** _(Author only)_
 
 > Only the comment author can update their own comment. Returns `403 Forbidden` otherwise.
@@ -701,7 +852,7 @@ Can be filtered by status.
 
 ---
 
-### 4.12 Delete Comment
+### 4.15 Delete Comment
 **`POST /api/tasks/{taskId}/comments/{commentId}/delete`** _(Author only)_
 
 > Only the comment author can delete their own comment. Returns `403 Forbidden` otherwise.
@@ -1238,7 +1389,7 @@ Can be filtered by status.
 | `IN_PROGRESS` | In progress |
 | `IN_REVIEW` | Under review |
 | `DONE` | Done |
-| `BLOCKED` | Blocked |
+| `CANCELLED` | Cancelled |
 
 ### TaskType
 | Value | Description |
